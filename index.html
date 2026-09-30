@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GREEN-API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1000px;
+        }
+        .left-panel, .right-panel {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .left-panel { flex: 1; }
+        .right-panel { flex: 1; display: flex; flex-direction: column; }
+        
+        .field { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #00a884;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        button:hover { background-color: #008f70; }
+        textarea {
+            flex-grow: 1;
+            height: 400px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        hr { margin: 20px 0; border: 0; border-top: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+<h2>GREEN-API Interface</h2>
+
+<div class="container">
+    <!-- Левая колонка -->
+    <div class="left-panel">
+        <div class="field">
+            <label>idInstance:</label>
+            <input type="text" id="idInstance" placeholder="1101234567">
+        </div>
+        <div class="field">
+            <label>ApiTokenInstance:</label>
+            <input type="text" id="apiTokenInstance" placeholder="abc123xyz456...">
+        </div>
+
+        <button onclick="getSettings()">getSettings</button>
+        <button onclick="getStateInstance()">getStateInstance</button>
+
+        <hr>
+
+        <div class="field">
+            <label>Номер телефона (sendMessage):</label>
+            <input type="text" id="phoneSendMessage" placeholder="77011234567">
+        </div>
+        <div class="field">
+            <label>Текст сообщения:</label>
+            <input type="text" id="messageText" placeholder="Hello World!">
+        </div>
+        <button onclick="sendMessage()">sendMessage</button>
+
+        <hr>
+
+        <div class="field">
+            <label>Номер телефона (sendFileByUrl):</label>
+            <input type="text" id="phoneSendFile" placeholder="77011234567">
+        </div>
+        <div class="field">
+            <label>URL файла:</label>
+            <input type="text" id="fileUrl" placeholder="https://site.com/image.png">
+        </div>
+        <button onclick="sendFileByUrl()">sendFileByUrl</button>
+    </div>
+
+    <!-- Правая колонка -->
+    <div class="right-panel">
+        <label>Ответ методов (Response):</label>
+        <textarea id="responseOutput" readonly placeholder="Ответ API..."></textarea>
+    </div>
+</div>
+
+<script>
+    // Вспомогательная функция для получения данных и базового URL
+    function getCredentials() {
+        const idInstance = document.getElementById('idInstance').value.trim();
+        const apiTokenInstance = document.getElementById('apiTokenInstance').value.trim();
+        
+        if (!idInstance || !apiTokenInstance) {
+            alert('Заполните idInstance и ApiTokenInstance!');
+            return null;
+        }
+        
+        return {
+            idInstance,
+            apiTokenInstance,
+            baseUrl: `https://api.green-api.com/waInstance${idInstance}`
+        };
+    }
+
+    // Вывод JSON
+    function showResponse(data) {
+        document.getElementById('responseOutput').value = JSON.stringify(data, null, 4);
+    }
+
+    // 1. Метод getSettings
+    async function getSettings() {
+        const creds = getCredentials();
+        if (!creds) return;
+
+        try {
+            const response = await fetch(`${creds.baseUrl}/getSettings/${creds.apiTokenInstance}`);
+            const data = await response.json();
+            showResponse(data);
+        } catch (error) {
+            showResponse({ error: error.message });
+        }
+    }
+
+    // 2. Метод getStateInstance
+    async function getStateInstance() {
+        const creds = getCredentials();
+        if (!creds) return;
+
+        try {
+            const response = await fetch(`${creds.baseUrl}/getStateInstance/${creds.apiTokenInstance}`);
+            const data = await response.json();
+            showResponse(data);
+        } catch (error) {
+            showResponse({ error: error.message });
+        }
+    }
+
+    // 3. Метод sendMessage
+    async function sendMessage() {
+        const creds = getCredentials();
+        if (!creds) return;
+
+        const chatId = document.getElementById('phoneSendMessage').value.trim() + '@c.us';
+        const message = document.getElementById('messageText').value.trim();
+
+        try {
+            const response = await fetch(`${creds.baseUrl}/sendMessage/${creds.apiTokenInstance}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chatId, message })
+            });
+            const data = await response.json();
+            showResponse(data);
+        } catch (error) {
+            showResponse({ error: error.message });
+        }
+    }
+
+    // 4. Метод sendFileByUrl
+    async function sendFileByUrl() {
+        const creds = getCredentials();
+        if (!creds) return;
+
+        const chatId = document.getElementById('phoneSendFile').value.trim() + '@c.us';
+        const url = document.getElementById('fileUrl').value.trim();
+        const fileName = url.split('/').pop() || 'file';
+
+        try {
+            const response = await fetch(`${creds.baseUrl}/sendFileByUrl/${creds.apiTokenInstance}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chatId, url, fileName })
+            });
+            const data = await response.json();
+            showResponse(data);
+        } catch (error) {
+            showResponse({ error: error.message });
+        }
+    }
+</script>
+
+</body>
+</html>
