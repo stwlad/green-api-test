@@ -184,14 +184,18 @@
         if (!creds) return;
 
         const chatId = document.getElementById('phoneSendFile').value.trim() + '@c.us';
-        const url = document.getElementById('fileUrl').value.trim();
-        const fileName = url.split('/').pop() || 'file';
+        const urlFile = document.getElementById('fileUrl').value.trim();
+        const fileName = urlFile.split('/').pop().split('?')[0] || 'file.png';
 
         try {
             const response = await fetch(`${creds.baseUrl}/sendFileByUrl/${creds.apiTokenInstance}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chatId, url, fileName })
+                body: JSON.stringify({ 
+                    chatId: chatId, 
+                    urlFile: urlFile, 
+                    fileName: fileName 
+                })
             });
             const data = await response.json();
             showResponse(data);
